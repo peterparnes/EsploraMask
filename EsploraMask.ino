@@ -40,6 +40,7 @@ const int increaseLength = 5;
 const int foodSize = 4;
 int lastDirection;
 int foodLife;
+boolean keys;
 
 void setup() {
   Serial.begin(9600);       // initialize serial communication with your computer
@@ -65,13 +66,27 @@ void initGame() {
   tft.setTextSize(1);
   tft.println("");
   tft.println("   By: Peter Parnes");
-    tft.println("   and Agneta Hedenstrom.");
+  tft.println("   and Agneta Hedenstrom.");
 
   tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
   tft.println(" ");
-  tft.println(" Press Switch 4 To Start");
-  while(Esplora.readButton(SWITCH_RIGHT)==HIGH) 
-    ;                                    // New game when swtich 4 is pressed
+  tft.println(" Press left for Yoystick.\n");
+  tft.println(" Press right for Keys.");
+  
+  boolean sw2 = false;
+  boolean sw4 = false;
+  
+
+  while(!sw2 && !sw4) {
+    // New game when swtich 2 or 4 is pressed
+    sw2 = Esplora.readButton(SWITCH_LEFT)==LOW;
+    sw4 = Esplora.readButton(SWITCH_RIGHT)==LOW;
+  }
+  if(sw2) {
+     keys = false;  
+  } else {
+    keys = true;
+  }
 
   tft.fillScreen(ST7735_BLACK);  // clear screen again
   tft.setRotation(0);            // coordinates for game actually use portrait mode
@@ -223,7 +238,11 @@ void drawEnd() {
 }
 
 int getDirection() {
+  if(keys) {
    return getDirectionKey(); 
+  } else {
+    return getDirectionJoystick();
+  }
 }
 
 int getDirectionKey() {
