@@ -287,7 +287,27 @@ boolean checkEqualDotDot(int x1, int y1, int x2, int y2) {
   return ( x1 == x2 && y1 == y2);  
 }
 
+// Based on the Adafruit GFX-library for drawing a circle. See AdaFruit_GFX.h 
+/******************************************************************
+ This is the core graphics library for all our displays, providing
+ basic graphics primitives (points, lines, circles, etc.). It needs
+ to be paired with a hardware-specific library for each display
+ device we carry (handling the lower-level functions).
+ 
+ Adafruit invests time and resources providing this open
+ source code, please support Adafruit and open-source hardware
+ by purchasing products from Adafruit!
+ 
+ Written by Limor Fried/Ladyada for Adafruit Industries.
+ BSD license, check license.txt for more information.
+ All text above must be included in any redistribution.
+ ******************************************************************/
 boolean checkIntersectCirleDot(int x0, int y0, int r, int dotX, int dotY) {
+  
+  if((abs(x0-dotX) > foodSize) || (abs(y0-dotY) > foodSize)) {
+    return false;
+  }
+  
   int f = 1 - r;
   int ddF_x = 1;
   int ddF_y = -2 * r;
