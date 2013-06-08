@@ -25,6 +25,9 @@ Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);  // define tft display (use 
 
 int playerScore;    // These variables hold the player & computer score.
 
+//SOUND
+#define sound_pin 6 // Direct sound on Esplora
+
 const int maxlength = 256U;
 const int initialLength = 10;
 int length; 
@@ -116,6 +119,7 @@ void loop() {
   addHead();
 
   if(eatingFood()) {
+    tone(sound_pin, 3500, 50);
     updateFood(true);
     tft.drawPixel(masken[length-1][0], masken[length-1][1], ST7735_GREEN);
     for(int i = 0; i < increaseLength; i++) {
