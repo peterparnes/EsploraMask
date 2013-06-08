@@ -32,7 +32,7 @@ const int height = ST7735_TFTWIDTH;
 const int width = ST7735_TFTHEIGHT;
 int dir = 0; // 0 = right, 1 = up, 2  = left, 3 = down
 int tick;; // how fast should we go
-const int initialTick = 20;
+const int initialTick = 30;
 int masken[maxlength][2];
 const int initialFoodLife = 25;
 const int totalFoodLife = 180;
@@ -102,6 +102,7 @@ void loop() {
 
   if(eatingFood()) {
     updateFood(true);
+    tft.drawPixel(masken[length-1][0], masken[length-1][1], ST7735_GREEN);
     for(int i = 0; i < increaseLength; i++) {
       length++;
       addHead();
@@ -112,7 +113,7 @@ void loop() {
     }
   }
 
-  drawMasken();
+  // drawMasken();
 
   updateFood(false);
 
@@ -147,7 +148,10 @@ void addHead() {
 
   masken[length-1][0] = masken[length-2][0] + y;
   masken[length-1][1] = masken[length-2][1] + x; 
-  if(masken[length-1][0] == 0 || masken[length-1][0] == height-1 || masken[length-1][1] == 0 || masken[length-1][1] == width-1) {
+  
+  tft.drawPixel(masken[length-1][0], masken[length-1][1], ST7735_GREEN);
+  
+  if(masken[length-1][0] == 0 || masken[length-1][0] == height-1 || masken[length-1][1] == 0 || masken[length-1][1] == width) {
     drawEnd(); 
   }
   if(eatingMySelf()) {
