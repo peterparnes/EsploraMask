@@ -147,7 +147,7 @@ void addHead() {
 
   masken[length-1][0] = masken[length-2][0] + y;
   masken[length-1][1] = masken[length-2][1] + x; 
-  if(masken[length-1][0] == 0 || masken[length-1][0] == height || masken[length-1][1] == 0 || masken[length-1][1] == width) {
+  if(masken[length-1][0] == 0 || masken[length-1][0] == height-1 || masken[length-1][1] == 0 || masken[length-1][1] == width-1) {
     drawEnd(); 
   }
   if(eatingMySelf()) {
