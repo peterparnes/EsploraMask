@@ -92,7 +92,7 @@ void initGame() {
   tft.setRotation(0);            // coordinates for game actually use portrait mode
   drawBorder();   // Draw boarder
 
-    playerScore=0;
+  playerScore=0;
 
   long seed = Esplora.readLightSensor() * Esplora.readMicrophone() / Esplora.readTemperature(DEGREES_F) ;
   randomSeed(seed); // create seed because on Esplora there are no unused analog pins for random noise
@@ -133,8 +133,17 @@ void loop() {
   updateFood(false);
 
   drawScore();
+  
+  // drawFoodLeftRGB();
 
   delay(tick);
+}
+
+// draw RGB for time on food left.... Not so good :/ 
+void drawFoodLeftRGB() {
+  int intensity = map(foodLife, 0, totalFoodLife, 0, 50);
+  Esplora.writeRGB(0,0,intensity);
+    
 }
 
 void addHead() {
