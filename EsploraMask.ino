@@ -149,9 +149,9 @@ void loop() {
     }
   }
   
-  if(cheat) {
-    drawMasken();
-  }
+  //if(cheat) {
+  //  drawMasken();
+  //}
 
   updateFood(false);
 
