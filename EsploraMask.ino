@@ -26,7 +26,7 @@ Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);  // define tft display (use 
 //SOUND
 #define sound_pin 6 // Direct sound on Esplora
 
-const int maxlength = 30;
+const int maxlength = 900;
 const int initialLength = 10;
 int length; 
 const int height = ST7735_TFTWIDTH;
@@ -144,12 +144,14 @@ void loop() {
       tick = 1; 
     }
   }
-
-  // drawMasken();
+  
+  if(cheat) {
+    drawMasken();
+  }
 
   updateFood(false);
 
-  drawScore();
+  drawScore(false);
 
   // drawFoodLeftRGB();
 
@@ -254,7 +256,7 @@ void drawEnd(boolean outOfMem) {
     delay(100);
   } 
   tft.invertDisplay(0);
-
+  drawScore(true);
   tft.setRotation(1); 
   tft.setTextSize(1);
   tft.setCursor(0, 15);
