@@ -23,20 +23,19 @@
 
 Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);  // define tft display (use Adafruit library) hw (if you add osi and sclk it will slow too much)
 
-int playerScore;    // These variables hold the player & computer score.
-
 //SOUND
 #define sound_pin 6 // Direct sound on Esplora
 
-const int maxlength = 256U;
+const int maxlength = 30;
 const int initialLength = 10;
 int length; 
 const int height = ST7735_TFTWIDTH;
 const int width = ST7735_TFTHEIGHT;
 int dir = 0; // 0 = right, 1 = up, 2  = left, 3 = down
-int tick;; // how fast should we go
+int tick;
+; // how fast should we go
 const int initialTick = 30;
-int masken[maxlength][2];
+byte masken[maxlength][2];
 const int initialFoodLife = 25;
 const int totalFoodLife = 180;
 const int increaseLength = 5;
@@ -44,6 +43,8 @@ const int foodSize = 4;
 int lastDirection;
 int foodLife;
 boolean keys;
+boolean autoplay;
+boolean cheat;
 
 void setup() {
   Serial.begin(9600);       // initialize serial communication with your computer
@@ -60,6 +61,8 @@ void initGame() {
   length = initialLength;
   lastDirection = 0;
   tick = initialTick;
+  autoplay = false;
+  cheat = false;
 
   // Draw splash screen text
   tft.setTextColor(ST7735_YELLOW, ST7735_BLACK);
@@ -73,31 +76,42 @@ void initGame() {
 
   tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
   tft.println(" ");
-  tft.println(" Press left for Yoystick.\n");
+  tft.println(" Press left for Yoystick.");
   tft.println(" Press right for Keys.");
-  
-  boolean sw2 = false;
-  boolean sw4 = false;
-  
+  tft.println(" Press down for Auto.");
+  tft.println(" Hold up for Cheat.");
 
-  while(!sw2 && !sw4) {
+  boolean sw1 = false;
+  boolean sw2 = false;
+  boolean sw3 = false;
+  boolean sw4 = false;
+
+  while(!sw2 && !sw3 && !sw4) {
     // New game when swtich 2 or 4 is pressed
+    sw1 = Esplora.readButton(SWITCH_UP)==LOW;
     sw2 = Esplora.readButton(SWITCH_LEFT)==LOW;
+    sw3 = Esplora.readButton(SWITCH_DOWN)==LOW;
     sw4 = Esplora.readButton(SWITCH_RIGHT)==LOW;
   }
   if(sw2) {
-     keys = false;  
-  } else {
+    keys = false;  
+  } 
+  else {
     keys = true;
+  }
+  if(sw3) {
+    autoplay = true;
+    cheat = true;
+  }
+  if(sw1) {
+    cheat = true; 
   }
 
   tft.fillScreen(ST7735_BLACK);  // clear screen again
   tft.setRotation(0);            // coordinates for game actually use portrait mode
   drawBorder();   // Draw boarder
 
-  playerScore=0;
-
-  long seed = Esplora.readLightSensor() * Esplora.readMicrophone() / Esplora.readTemperature(DEGREES_F) ;
+    long seed = Esplora.readLightSensor() * Esplora.readMicrophone() / Esplora.readTemperature(DEGREES_F) ;
   randomSeed(seed); // create seed because on Esplora there are no unused analog pins for random noise
 
   // init masken 
@@ -111,7 +125,6 @@ void initGame() {
 
 void loop() { 
   tft.drawPixel(masken[0][0], masken[0][1], ST7735_BLACK);
-
   for(int i = 1; i < length; i++) {
     masken[i-1][0] = masken[i][0];
     masken[i-1][1] = masken[i][1];
@@ -137,7 +150,7 @@ void loop() {
   updateFood(false);
 
   drawScore();
-  
+
   // drawFoodLeftRGB();
 
   delay(tick);
@@ -147,10 +160,14 @@ void loop() {
 void drawFoodLeftRGB() {
   int intensity = map(foodLife, 0, totalFoodLife, 0, 50);
   Esplora.writeRGB(0,0,intensity);
-    
+
 }
 
 void addHead() {
+  if(length == maxlength) {
+    drawEnd(true);
+  } 
+  
   // addNewMaskenElement
   dir = getDirection();
   int x;
@@ -176,14 +193,16 @@ void addHead() {
 
   masken[length-1][0] = masken[length-2][0] + y;
   masken[length-1][1] = masken[length-2][1] + x; 
-  
+
   tft.drawPixel(masken[length-1][0], masken[length-1][1], ST7735_GREEN);
-  
+
   if(masken[length-1][0] == 0 || masken[length-1][0] == height-1 || masken[length-1][1] == 0 || masken[length-1][1] == width) {
-    drawEnd(); 
+    drawEnd(false); 
   }
-  if(eatingMySelf()) {
-    drawEnd();
+  if(!cheat) {
+    if(eatingMySelf()) {
+      drawEnd(false);
+    }
   }
 }
 
@@ -212,20 +231,22 @@ void updateFood(boolean forceNew) {
 }
 
 boolean eatingFood() {
-  boolean eating = false;
   return checkIntersectCirleDot(food[0], food[1], foodSize, masken[length-1][0], masken[length-1][1]);
-  return eating;
 }
 
-void drawScore() {
+void drawScore(boolean erase) {
   tft.setRotation(1); 
   tft.setTextSize(1);
   tft.setCursor(2, 2);
-  tft.print(length);
+  if(erase) {
+    tft.print("   ");
+  } else {
+    tft.print(length);
+  }
   tft.setRotation(0);  
 }
 
-void drawEnd() {
+void drawEnd(boolean outOfMem) {
   for(int i = 0; i < 5; i++) {
     tft.invertDisplay(0);
     delay(100);
@@ -236,8 +257,13 @@ void drawEnd() {
 
   tft.setRotation(1); 
   tft.setTextSize(1);
-  tft.setCursor(22, 15);
-  tft.print("Score: ");
+  tft.setCursor(0, 15);
+  if(outOfMem) {
+    tft.print(" Out of memory :(");
+    tft.println();
+    tft.println();
+  }
+  tft.print(" Score: ");
   tft.println(length);
   tft.println();
   tft.println(" Press Switch 4 To Restart");
@@ -251,11 +277,40 @@ void drawEnd() {
 }
 
 int getDirection() {
-  if(keys) {
-   return getDirectionKey(); 
-  } else {
+  if(autoplay) {
+    return getDirectionAuto();
+  } 
+  else if(keys) {
+    return getDirectionKey(); 
+  } 
+  else {
     return getDirectionJoystick();
   }
+}
+
+int getDirectionAuto() {
+  int diff0 = food[0] - masken[length-1][0];
+  int diff1 = food[1] - masken[length-1][1];
+  Serial.print(diff0);
+  Serial.print(" ");
+  Serial.println(diff1);
+
+  if(diff1 < 0) {
+    return 2; 
+  } 
+  else if(diff1 > 0) {
+    return 0; 
+  } 
+  else {
+    if(diff0 < 0) {
+      return 3; 
+    } 
+    else if(diff0 > 0) {
+      return 1; 
+    }
+  }
+  // only here if we are eating.... 
+  return 0;
 }
 
 int getDirectionKey() {
@@ -325,25 +380,25 @@ boolean checkEqualDotDot(int x1, int y1, int x2, int y2) {
 
 // Based on the Adafruit GFX-library for drawing a circle. See AdaFruit_GFX.h 
 /******************************************************************
- This is the core graphics library for all our displays, providing
- basic graphics primitives (points, lines, circles, etc.). It needs
- to be paired with a hardware-specific library for each display
- device we carry (handling the lower-level functions).
- 
- Adafruit invests time and resources providing this open
- source code, please support Adafruit and open-source hardware
- by purchasing products from Adafruit!
- 
- Written by Limor Fried/Ladyada for Adafruit Industries.
- BSD license, check license.txt for more information.
- All text above must be included in any redistribution.
+ * This is the core graphics library for all our displays, providing
+ * basic graphics primitives (points, lines, circles, etc.). It needs
+ * to be paired with a hardware-specific library for each display
+ * device we carry (handling the lower-level functions).
+ * 
+ * Adafruit invests time and resources providing this open
+ * source code, please support Adafruit and open-source hardware
+ * by purchasing products from Adafruit!
+ * 
+ * Written by Limor Fried/Ladyada for Adafruit Industries.
+ * BSD license, check license.txt for more information.
+ * All text above must be included in any redistribution.
  ******************************************************************/
 boolean checkIntersectCirleDot(int x0, int y0, int r, int dotX, int dotY) {
-  
+
   if((abs(x0-dotX) > foodSize) || (abs(y0-dotY) > foodSize)) {
     return false;
   }
-  
+
   int f = 1 - r;
   int ddF_x = 1;
   int ddF_y = -2 * r;
@@ -415,6 +470,8 @@ boolean checkIntersectCirleDot(int x0, int y0, int r, int dotX, int dotY) {
 
   return intersect;
 }
+
+
 
 
 
