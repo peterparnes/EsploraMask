@@ -124,6 +124,10 @@ void initGame() {
 }
 
 void loop() { 
+  if(autoplay && Esplora.readButton(SWITCH_UP)==LOW) {
+    drawEnd(false);
+  }  
+  
   tft.drawPixel(masken[0][0], masken[0][1], ST7735_BLACK);
   for(int i = 1; i < length; i++) {
     masken[i-1][0] = masken[i][0];
@@ -293,26 +297,25 @@ int getDirection() {
 int getDirectionAuto() {
   int diff0 = food[0] - masken[length-1][0];
   int diff1 = food[1] - masken[length-1][1];
-  Serial.print(diff0);
-  Serial.print(" ");
-  Serial.println(diff1);
 
+  int dir = lastDirection;
   if(diff1 < 0) {
-    return 2; 
+    dir = 2; 
   } 
   else if(diff1 > 0) {
-    return 0; 
+    dir = 0; 
   } 
   else {
     if(diff0 < 0) {
-      return 3; 
+      dir = 3; 
     } 
     else if(diff0 > 0) {
-      return 1; 
+      dir = 1; 
     }
   }
-  // only here if we are eating.... 
-  return 0;
+  
+  lastDirection = dir;
+  return dir;
 }
 
 int getDirectionKey() {
