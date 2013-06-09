@@ -45,12 +45,15 @@ int foodLife;
 boolean keys;
 boolean autoplay;
 boolean cheat;
+boolean soundOn;
+int score;
 
 void setup() {
   Serial.begin(9600);       // initialize serial communication with your computer
   Serial.println("Hej Masken");
   tft.initR(INITR_REDTAB);       
   initGame();
+  soundOn = true; 
 }
 
 void initGame() {
@@ -63,6 +66,7 @@ void initGame() {
   tick = initialTick;
   autoplay = false;
   cheat = false;
+  score = 10;
 
   // Draw splash screen text
   tft.setTextColor(ST7735_YELLOW, ST7735_BLACK);
@@ -102,6 +106,7 @@ void initGame() {
   if(sw3) {
     autoplay = true;
     cheat = true;
+    tick = 1;
   }
   if(sw1) {
     cheat = true; 
@@ -127,7 +132,7 @@ void loop() {
   if(autoplay && Esplora.readButton(SWITCH_UP)==LOW) {
     drawEnd(false);
   }  
-  
+
   tft.drawPixel(masken[0][0], masken[0][1], ST7735_BLACK);
   for(int i = 1; i < length; i++) {
     masken[i-1][0] = masken[i][0];
@@ -140,15 +145,19 @@ void loop() {
     updateFood(true);
     tft.drawPixel(masken[length-1][0], masken[length-1][1], ST7735_GREEN);
     for(int i = 0; i < increaseLength; i++) {
-      length++;
-      addHead();
-    }
+      if(length < maxlength) {
+        length++;
+        addHead();
+      }
+      score++;
+    } 
+
     tick--;
     if(tick < 1) {
       tick = 1; 
     }
   }
-  
+
   //if(cheat) {
   //  drawMasken();
   //}
@@ -170,10 +179,10 @@ void drawFoodLeftRGB() {
 }
 
 void addHead() {
-  if(length == maxlength) {
-    drawEnd(true);
-  } 
-  
+  //if(length == maxlength) {
+  //  drawEnd(true);
+  //} 
+
   // addNewMaskenElement
   dir = getDirection();
   int x;
@@ -246,8 +255,9 @@ void drawScore(boolean erase) {
   tft.setCursor(2, 2);
   if(erase) {
     tft.print("   ");
-  } else {
-    tft.print(length);
+  } 
+  else {
+    tft.print(score);
   }
   tft.setRotation(0);  
 }
@@ -313,7 +323,7 @@ int getDirectionAuto() {
       dir = 1; 
     }
   }
-  
+
   lastDirection = dir;
   return dir;
 }
@@ -475,6 +485,8 @@ boolean checkIntersectCirleDot(int x0, int y0, int r, int dotX, int dotY) {
 
   return intersect;
 }
+
+
 
 
 
